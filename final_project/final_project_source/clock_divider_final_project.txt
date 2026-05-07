@@ -1,0 +1,30 @@
+module clock_divider(
+input main_clk, // Basys Clock runs at 100MHz
+input reset,
+output reg div_clk,
+output reg slow_pulse);
+
+reg [23:0] pulsecount; // counting to 12,500,000 (binary: 1011_1110_1011_1100_0010_0000)
+
+always @ (posedge main_clk or posedge reset) begin
+if (reset) begin
+pulsecount <= 0;
+div_clk <= 0;
+slow_pulse <=0;
+end
+
+else begin
+if (pulsecount == 100000) begin //12500000
+div_clk <= ~div_clk;
+slow_pulse <= 1;
+pulsecount <= 0;
+end
+
+else begin
+pulsecount <= pulsecount + 1;
+slow_pulse <= 0;
+end
+
+end
+end
+endmodule

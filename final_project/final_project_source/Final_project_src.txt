@@ -1,0 +1,31 @@
+module Final_project_src(
+input main_clk,
+input reset,
+input hour_up,
+input hour_down,
+input minute_up,
+input minute_down,
+input second,
+input pause,
+output reg [6:0] seg_7,
+output reg dp,
+output reg [3:0] an
+    );
+    reg state,next_state;
+    parameter S0 = 0,S1 = 1,S2 = 2,S3 = 3;
+    wire en[4:0]; //first en is the pulse for seconds
+    parameter Sup = 0, Sdown = 0;
+    wire [6:0] count_seconds;
+    wire [4:0] count_ones_minute,count_tens_minute,count_ones_hour;
+    wire slow_pulse; //fix this!!
+    wire minute_tens_up, minute_tens_down, hour_tens_up, hour_tens_down;  //fix this!!
+    
+    state_counter seconds (en[0],slow_pulse,reset,Sup,Sdown,7'd59,pause,en[1],count_seconds);
+    state_counter minutes_ones (en[1],slow_pulse,reset,minute_up,minute_down,7'd9,pause,en[2],count_ones_minute);
+    state_counter minutes_tens (en[2],slow_pulse,reset,minute_tens_up,minute_tens_down,7'd5,pause,en[3],count_tens_minute);
+    state_counter hours (en[3],slow_pulse,reset,hour_up,hour_down,7'd11,pause,en[4],count_ones_hour);
+    //because the hours counter works weirdly, counting to 12, so that the ones place has two end numbers,
+    //I figured it would be easier to simply modify the seven seg code to adjust for it
+    //also, because we're actually counting 1-12, not 0-12, I changed the max of this to 11, and then will add 1 later
+    
+endmodule

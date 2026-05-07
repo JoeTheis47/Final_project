@@ -1,0 +1,51 @@
+module state_cntr(
+    input en,
+    input clk,
+    input reset,
+    input count_up1,
+    input count_down1,
+    input wire [3:0] terminal_count,
+    input pause,
+    output pulse,
+    output wire [3:0] count
+    );
+
+reg [3:0] cnt;
+reg [3:0] next_cnt;
+reg cnt_change;
+
+// flip-flops (state memeory)
+
+always @(posedge clk or posedge reset) begin
+    if (reset==1'b1) cnt<=8'd0; // reset to zero
+    else cnt <= next_cnt;
+end
+
+always @(posedge count_up1 or posedge count_down1) begin // check to see if counting up or down has been selected
+    //count_up logic
+    if (count_up1) begin
+        if (cnt == terminal_count) next_cnt = 0;
+        // if the counter reaches its maximum, reset to 0. Otherwise count up
+        else next_cnt <= cnt + 1;
+    end
+    else if (count_down1) begin
+        if(cnt == 4'd0) next_cnt <= terminal_count;
+        // if the counter reaches its minimum, reset to its max. Otherwise count down
+        else next_cnt <= cnt - 1;
+    end
+end
+
+// next-state logic
+always @(*) begin
+    if (~pause && en && ~count_up1 && ~count_down1) begin   //counts only when enabled. Prevents counting if it was supposed to increment down or up, or if the clk is paused (to change time w/out enable)  
+        if (cnt == terminal_count) next_cnt = 0;
+        // if the counter reaches max, go back to zero
+        else next_cnt = cnt + 1;
+        //otherwise, keep counting
+    end
+    else next_cnt = cnt; // if enable is low stay in the same state
+end
+// output logic 
+assign pulse = (cnt == terminal_count) && en &&~(count_down1 || pause); // send a enable signal out only if youve hit the max, on an enable, not on a count_down, and the counter isnt paused
+assign count = cnt; // output the count
+endmodule
