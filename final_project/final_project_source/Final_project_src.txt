@@ -21,7 +21,7 @@ output reg [3:0] an
     wire minute_tens_up, minute_tens_down, hour_tens_up, hour_tens_down;  //fix this!!
     wire second_length;
     
-    state_counter seconds (en[0],slow_pulse,reset,Sup,Sdown,7'd59,pause,en[1],count_seconds);
+    state_counter counter_seconds (en[0],slow_pulse,reset,Sup,Sdown,7'd59,pause,en[1],count_seconds);
     state_counter minutes_ones (en[1],slow_pulse,reset,minute_up,minute_down,7'd9,pause,en[2],count_ones_minute);
     state_counter minutes_tens (en[2],slow_pulse,reset,minute_tens_up,minute_tens_down,7'd5,pause,en[3],count_tens_minute);
     state_counter hours (en[3],slow_pulse,reset,hour_up,hour_down,7'd11,pause,en[4],count_hour);
@@ -29,8 +29,12 @@ output reg [3:0] an
     //I figured it would be easier to simply modify the seven seg code to adjust for it, then count up till 12 instead of 9
     //also, because we're actually counting 1-12, not 0-12, I changed the max of this to 11, and then will add 1 later
 
-    pulse_count seconds (main_clk, reset, second_length,En[0]); // add a pulse count here to give the clock update timing
+    pulse_count pulse_seconds (main_clk, reset, second_length,En[0]); // add a pulse count here to give the clock update timing
     pulse_count main (main_clk, reset, div_clk, slow_pulse); // add a pulse count here to give the an update every second for the second counter module (output         needs to be to En[0])
+
+    num_to_disp disp_minute_ones();
+    num_to_disp disp_minute_tens ();
+    num_to_disp disp_hour ();
     always @(posedge slow_pulse) begin
         case(state)  
         S0: begin next_state <= S1; An <= 4'b0111; seg_7 <= count_ones_minute[3:0]; end
