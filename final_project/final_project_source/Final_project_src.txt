@@ -27,5 +27,8 @@ output reg [3:0] an
     //because the hours counter works weirdly, counting to 12, so that the ones place has two end numbers,
     //I figured it would be easier to simply modify the seven seg code to adjust for it, then count up till 12 instead of 9
     //also, because we're actually counting 1-12, not 0-12, I changed the max of this to 11, and then will add 1 later
+
+    pulse_count seconds (); // add a pulse count here to give the clock update timing
+    pulse_count main (); // add a pulse count here to give the an update every second for the second counter module (output needs to be to En[0])
     
 endmodule
