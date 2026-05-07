@@ -25,7 +25,7 @@ output reg [3:0] an
     state_counter minutes_tens (en[2],slow_pulse,reset,minute_tens_up,minute_tens_down,7'd5,pause,en[3],count_tens_minute);
     state_counter hours (en[3],slow_pulse,reset,hour_up,hour_down,7'd11,pause,en[4],count_ones_hour);
     //because the hours counter works weirdly, counting to 12, so that the ones place has two end numbers,
-    //I figured it would be easier to simply modify the seven seg code to adjust for it
+    //I figured it would be easier to simply modify the seven seg code to adjust for it, then count up till 12 instead of 9
     //also, because we're actually counting 1-12, not 0-12, I changed the max of this to 11, and then will add 1 later
     
 endmodule
