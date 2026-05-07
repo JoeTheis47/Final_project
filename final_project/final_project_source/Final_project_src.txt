@@ -32,9 +32,9 @@ output reg [3:0] an
     pulse_count pulse_seconds (main_clk, reset, second_length,En[0]); // add a pulse count here to give the clock update timing
     pulse_count main (main_clk, reset, div_clk, slow_pulse); // add a pulse count here to give the an update every second for the second counter module (output         needs to be to En[0])
 
-    num_to_disp disp_minute_ones();
-    num_to_disp disp_minute_tens ();
-    num_to_disp disp_hour ();
+    num_to_disp disp_minute_ones(count_ones_minute,);
+    num_to_disp disp_minute_tens (count_tens_minute, );
+    num_to_disp disp_hour (count_hour,);
     always @(posedge slow_pulse) begin
         case(state)  
         S0: begin next_state <= S1; An <= 4'b0111; seg_7 <= count_ones_minute[3:0]; end
