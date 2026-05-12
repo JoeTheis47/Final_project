@@ -1,45 +1,67 @@
 module Final_project_src(
 input main_clk,
 input reset,
-input hour_up,
-input hour_down,
-input minute_up,
-input minute_down,
-input second,
+input Hup,
+input Hdown,
+input Mup,
+input Mdown,
 input pause,
+output [6:0] count_seconds,
 output reg [6:0] seg_7,
 output reg dp,
 output reg [3:0] an
     );
+    
     reg state,next_state;
     parameter S0 = 0,S1 = 1,S2 = 2,S3 = 3;
     wire en[4:0]; //first en is the pulse for seconds
-    parameter Sup = 0, Sdown = 0;
-    wire [6:0] count_seconds;
-    wire [4:0] count_ones_minute,count_tens_minute,count_ones_hour;
-    wire slow_pulse; //fix this!!
-    wire minute_tens_up, minute_tens_down, hour_tens_up, hour_tens_down;  //fix this!!
-    wire second_length;
     
-    state_counter counter_seconds (en[0],slow_pulse,reset,Sup,Sdown,7'd59,pause,en[1],count_seconds);
-    state_counter minutes_ones (en[1],slow_pulse,reset,minute_up,minute_down,7'd9,pause,en[2],count_ones_minute);
-    state_counter minutes_tens (en[2],slow_pulse,reset,minute_tens_up,minute_tens_down,7'd5,pause,en[3],count_tens_minute);
-    state_counter hours (en[3],slow_pulse,reset,hour_up,hour_down,7'd11,pause,en[4],count_hour);
+    wire minute_up , minute_down , hour_up , hour_down , minute_tens_up , minute_tens_down;
+    
+    wire second_length;     // the length of one second
+    wire neg_pulse_min;     // only one object actually counts down after recieving a neg_pulse. So, its specifically labeled
+    wire DNE1;              // I just needed something to input into functions that has no meaningful effect on the program. Hence, this variable Does Not Exist
+    
+    wire [4:0] count_ones_minute , count_tens_minute , count_hour;
+    
+    wire slow_pulse;
+    wire div_clk;
+    
+    wire [6:0] seg1 , seg2 , seg3 , seg4 , DNE2;
+    
+    clock_divider U1 (main_clk,reset,div_clk,slow_pulse);
+    
+    debouncer U3 (main_clk,reset,Mup,minute_up);
+    debouncer U4 (main_clk,reset,Mdown,minute_down);
+    debouncer U5 (main_clk,reset,Hup,hour_up);
+    debouncer U6 (main_clk,reset,Hdown,hour_down);
+    
+    state_cntr seconds (1'b1,div_clk,reset,1'b0,1'b0,8'd59,pause,en[1],DNE1,count_seconds);
+    state_cntr minutes_ones (en[1],div_clk,reset,minute_up,minute_down,8'd9,pause,en[2],neg_pulse_min,count_ones_minute);
+    state_cntr minutes_tens (en[2],div_clk,reset,1'b0,neg_pulse_min,8'd5,pause,en[3],DNE1,count_tens_minute);
+    state_cntr hours (en[3],div_clk,reset,hour_up,hour_down,8'd11,pause,en[4],DNE1,count_hour);
     //because the hours counter works weirdly, counting to 12, so that the ones place has two end numbers,
-    //I figured it would be easier to simply modify the seven seg code to adjust for it, then count up till 12 instead of 9
+    //I figured it would be easier to simply modify the seven seg code to adjust for it
     //also, because we're actually counting 1-12, not 0-12, I changed the max of this to 11, and then will add 1 later
+    
+    clock_divider pulse_seconds (main_clk, reset, second_length,en[0]); // add a pulse count here to give the an update every second for the second counter module (output needs to be to En[0])
 
-    pulse_count pulse_seconds (main_clk, reset, second_length,En[0]); // add a pulse count here to give the clock update timing
-    pulse_count main (main_clk, reset, div_clk, slow_pulse); // add a pulse count here to give the an update every second for the second counter module (output         needs to be to En[0])
-
-    num_to_disp disp_minute_ones(count_ones_minute,);
-    num_to_disp disp_minute_tens (count_tens_minute, );
-    num_to_disp disp_hour (count_hour,);
-    always @(posedge slow_pulse) begin
+    seg7_final disp_minute_ones (count_ones_minute,div_clk,seg1,DNE2);
+    seg7_final disp_minute_tens (count_tens_minute,div_clk,DNE2,seg2);
+    seg7_final disp_hour (count_hour,div_clk,seg3,seg4);
+    
+    always @(posedge second_length) begin
+        if (reset) state <= 1'b0;
+        else state <= next_state;
+    end
+    
+    always @(posedge div_clk) begin
         case(state)  
-        S0: begin next_state <= S1; An <= 4'b0111; seg_7 <= count_ones_minute[3:0]; end
-        S1: begin next_state <= S2; An <= 4'b1011; seg_7 <= count_tens_minute [3:0]; end
-        S2: begin next_state <= S3; An <= 4'b1101; seg_7 <= count_hour [3:0]; end
-        S3: begin next_state <= S0; An <= 4'b1110; seg_7 <= count_hour [7:4]; end
-        default: begin next_state <= S0; An <= 4'b0111; seg_7 <= count_ones_minute[3:0];
+            S0: begin an <= 4'b0111; next_state <= S1; seg_7 <= seg1; end
+            S1: begin an <= 4'b1011; next_state <= S2; seg_7 <= seg2; end
+            S2: begin an <= 4'b1101; next_state <= S3; seg_7 <= seg3; end
+            S3: begin an <= 4'b1110; next_state <= S0; seg_7 <= seg4; end
+            default: begin next_state <= S0; an <= 4'b1110; seg_7 <= seg4; end
+        endcase
+    end
 endmodule
