@@ -36,7 +36,7 @@ output reg [3:0] an
     debouncer U5 (main_clk,reset,Hup,hour_up);
     debouncer U6 (main_clk,reset,Hdown,hour_down);
     
-    state_cntr seconds (1'b1,div_clk,reset,1'b0,1'b0,8'd59,pause,en[1],DNE1,count_seconds);
+    state_cntr seconds (1'b1,second_length,reset,1'b0,1'b0,8'd59,pause,en[1],DNE1,count_seconds);
     state_cntr minutes_ones (en[1],div_clk,reset,minute_up,minute_down,8'd9,pause,en[2],neg_pulse_min,count_ones_minute);
     state_cntr minutes_tens (en[2],div_clk,reset,1'b0,neg_pulse_min,8'd5,pause,en[3],DNE1,count_tens_minute);
     state_cntr hours (en[3],div_clk,reset,hour_up,hour_down,8'd11,pause,en[4],DNE1,count_hour);
